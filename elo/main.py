@@ -22,9 +22,6 @@ auth = HTTPBasicAuth()
 class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True)
-    rating = db.Column(db.Integer, unique=False)
-    wins = db.Column(db.Integer, unique=False)
-    losses = db.Column(db.Integer, unique=False)
     password_hash = db.Column(db.String(128))
 
     def __init__(self, name, rating, wins, losses):
@@ -39,20 +36,42 @@ class Player(db.Model):
     def verify_password(self, password):
         return pwd_context.verify(password, self.password_hash)
 
-
 class PlayerSchema(ma.Schema):
     class Meta:
         fields = ("name", "rating", "wins", "losses")
 
-
 player_schema = PlayerSchema()
 players_schema = PlayerSchema(many=True)
+
+class Game(db.Model):
+    name = db.Column(db.String(80), unique=True)
+
+class GameSchema(ma.Schema):
+    class Meta:
+        fields = ("name")
+
+game_schema = GameSchema()
+games_schema = GameSchema(many=True)
+
+class Score(db.Model):
+    player = db.relationship("Player", backref="players")
+    game = db.relationship("Game", backref="scores")
+    rating = db.Column(db.Integer, unique=False)
+    wins = db.Column(db.Integer, unique=False)
+    losses = db.Column(db.Integer, unique=False)
+
+class ScoreSchema(db.Model):
+    class Meta:
+        fields = ("player", "game", "rating", "wins", "losses")
+
+score_schema = ScoreSchema()
+scores_schema = ScoreSchema(many=True)
 
 
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    player1 = db.Column(db.String(80), unique=False)
-    player2 = db.Column(db.String(80), unique=False)
+    player1 = db.relationship("Player", backref="players")
+    player2 = db.relationship("Player", backref="players")
     p1_score = db.Column(db.Integer, unique=False)
     p2_score = db.Column(db.Integer, unique=False)
 
